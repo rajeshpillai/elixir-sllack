@@ -2,11 +2,11 @@ defmodule SllackWeb.ChatRoomLive do
   use SllackWeb, :live_view
 
   alias Sllack.Chat.Room
-  alias Sllack.Repo
+  # - alias Sllack.Repo
+  alias Sllack.Chat
 
   def mount(_params, _session, socket) do
-    rooms = Repo.all(Room)
-
+    rooms = Chat.list_rooms()
     {:ok, assign(socket, rooms: rooms)}
   end
 
@@ -14,7 +14,7 @@ defmodule SllackWeb.ChatRoomLive do
     room =
       case Map.fetch(params, "id") do
         {:ok, id} ->
-          Repo.get!(Room, id)
+          Chat.get_room!(id)
 
         :error ->
           List.first(socket.assigns.rooms)
