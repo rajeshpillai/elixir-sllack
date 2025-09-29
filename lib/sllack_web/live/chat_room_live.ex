@@ -10,8 +10,8 @@ defmodule SllackWeb.ChatRoomLive do
   end
 
   def handle_event("toggle_topic", _value, socket) do
-    # {:noreply, update(socket, :hide_topic?, &(!&1))}
-    {:noreply, assign(socket, :hide_topic?, !socket.assigns.hide_topic?)}
+    # {:noreply, assign(socket, :hide_topic?, !socket.assigns.hide_topic?)}
+    {:noreply, update(socket, :hide_topic?, &(!&1))}
   end
 
   def render(assigns) do
