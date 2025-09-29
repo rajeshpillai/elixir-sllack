@@ -17,7 +17,8 @@ defmodule SllackWeb.Router do
   scope "/", SllackWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    # get "/", PageController, :home
+    live "/", ChatRoomLive
   end
 
   # Other scopes may use custom stacks.
