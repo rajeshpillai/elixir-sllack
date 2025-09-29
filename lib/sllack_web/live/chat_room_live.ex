@@ -6,7 +6,12 @@ defmodule SllackWeb.ChatRoomLive do
 
   def mount(_params, _session, socket) do
     room = Room |> Repo.all() |> List.first()
-    {:ok, assign(socket, room: room)}
+    {:ok, assign(socket, room: room, hide_topic?: false)}
+  end
+
+  def handle_event("toggle_topic", _value, socket) do
+    # {:noreply, update(socket, :hide_topic?, &(!&1))}
+    {:noreply, assign(socket, :hide_topic?, !socket.assigns.hide_topic?)}
   end
 
   def render(assigns) do
@@ -17,8 +22,14 @@ defmodule SllackWeb.ChatRoomLive do
           <h1 class="text-sm font-bold leading-none">
             {@room.name}
           </h1>
-          <div class="text-xs leading-none h-3.5">
-            {@room.topic}
+          <div
+            class={["text-xs leading-none h-3.5", @hide_topic? && "text-slate-600"]}
+            phx-click="toggle_topic">
+            <%= if @hide_topic? do %>
+              [Topic hidden]
+            <% else %>
+              <%= @room.topic %>
+            <% end %>
           </div>
         </div>
       </div>
