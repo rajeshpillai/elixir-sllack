@@ -19,6 +19,7 @@ defmodule SllackWeb.Router do
 
     # get "/", PageController, :home
     live "/", ChatRoomLive
+    live "/rooms/:id", ChatRoomLive
   end
 
   # Other scopes may use custom stacks.
