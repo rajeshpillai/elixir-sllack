@@ -4,13 +4,23 @@ defmodule SllackWeb.ChatRoomLive do
   alias Sllack.Chat.Room
   alias Sllack.Repo
 
-  def mount(params, _session, socket) do
+  def mount(_params, _session, socket) do
     rooms = Repo.all(Room)
-    room = case Map.fetch(params, "id") do
-      {:ok, id} -> Repo.get!(Room, id)
-      :error -> List.first(rooms)
-    end
-    {:ok, assign(socket, hide_topic?: false, room: room, rooms: rooms)}
+
+    {:ok, assign(socket, rooms: rooms)}
+  end
+
+  def handle_params(params, _uri, socket) do
+    room =
+      case Map.fetch(params, "id") do
+        {:ok, id} ->
+          Repo.get!(Room, id)
+
+        :error ->
+          List.first(socket.assigns.rooms)
+      end
+
+    {:noreply, assign(socket, room: room, hide_topic?: false)}
   end
 
   def handle_event("toggle_topic", _value, socket) do
