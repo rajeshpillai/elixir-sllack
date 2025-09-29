@@ -7,8 +7,6 @@ defmodule SllackWeb.Layouts do
 
   # attr :flash, :map, required: true, doc: "the map of flash messages"
 
-
-
   # Embed all files in layouts/* within this module.
   # The default root.html.heex file contains the HTML
   # skeleton of your application, namely HTML headers
@@ -29,7 +27,6 @@ defmodule SllackWeb.Layouts do
       </Layouts.app>
 
   """
-
 
   def app(assigns) do
     ~H"""
