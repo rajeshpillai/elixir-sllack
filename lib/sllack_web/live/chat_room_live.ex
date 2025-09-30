@@ -13,6 +13,7 @@ defmodule SllackWeb.ChatRoomLive do
   end
 
   def handle_params(params, _uri, socket) do
+    if socket.assigns[:room], do: Chat.unsubscribe_from_room(socket.assigns.room)
     room =
       case Map.fetch(params, "id") do
         {:ok, id} ->
@@ -24,6 +25,8 @@ defmodule SllackWeb.ChatRoomLive do
 
     # {:noreply, assign(socket, room: room, hide_topic?: false, page_title: "#" <> room.name)}
     messages = Chat.list_messages_in_room(room)
+
+    Chat.subscribe_to_room(room)
 
     {:noreply,
      socket
@@ -38,38 +41,35 @@ defmodule SllackWeb.ChatRoomLive do
 
   end
 
+  def handle_info({:new_message, message}, socket) do
+    {:noreply, stream_insert(socket, :messages, message)}
+  end
+
+  def handle_info({:message_deleted, message}, socket) do
+    {:noreply, stream_delete(socket, :messages, message.id)}
+  end
+
   defp assign_message_form(socket, changeset) do
     assign(socket, :new_message_form, to_form(changeset))
   end
 
   def handle_event("delete-message", %{"id" => id}, socket) do
-    IO.puts("Delete message: #{id}")
     %{current_scope: current_scope} = socket.assigns
     current_user = current_scope.user
-    case Chat.delete_message_by_id(id, current_user) do
-      {:ok, _message} ->
-        {:noreply, stream_delete(socket, :messages, id)}
-
-      {:error, _reason} ->
-        {:noreply, socket}
-    end
+    Chat.delete_message_by_id(id, current_user)
+    {:noreply, socket}
   end
 
   def handle_event("submit-message", %{"message" => message_params}, socket) do
-    IO.puts("Submit message: ")
-    IO.inspect(socket.assigns)
     %{current_scope: current_scope, room: room} = socket.assigns
     current_user = current_scope.user
     socket =
-      case Chat.create_message(room, message_params, current_user) do
-        {:ok, message} ->
-          socket
-          |> stream_insert(:messages, message)
-          |> assign_message_form(Chat.change_message(%Message{}))
-
-        {:error, changeset} ->
-          assign_message_form(socket, changeset)
-      end
+      case Chat.create_message(room , message_params, current_user) do
+      {:ok, _message} ->
+        assign_message_form(socket, Chat.change_message(%Message{}))
+      {:error, changeset} ->
+        assign_message_form(socket, changeset)
+    end
 
     {:noreply, socket}
   end
@@ -195,12 +195,12 @@ defmodule SllackWeb.ChatRoomLive do
     <div id={@dom_id} class="group relative flex px-4 py-3">
       <button
         :if={@current_user.id == @message.user_id}
-        class="absolute top-4 right-4 text-red-500 hover:text-red-800 cursor-pointer hidden group-hover:block"
         data-confirm="Are you sure?"
         phx-click="delete-message"
         phx-value-id={@message.id}
+        class="absolute top-4 right-4 text-red-500 hover:text-red-800 cursor-pointer hidden group-hover:block"
       >
-      <.icon name="hero-trash" class="h-4 w-4" />
+        <.icon name="hero-trash" class="h-4 w-4" />
       </button>
       <div class="h-10 w-10 rounded shrink-0 bg-slate-300"></div>
       <div class="ml-2">
@@ -248,6 +248,7 @@ defmodule SllackWeb.ChatRoomLive do
         {@room.name}
       </span>
     </.link>
+
     """
   end
 
