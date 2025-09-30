@@ -17,6 +17,8 @@ defmodule SllackWeb.ChatRoomLive do
       OnlineUsers.track(self(), socket.assigns.current_scope.user)
     end
 
+    OnlineUsers.subscribe()
+
     socket =
       socket
       |> assign(rooms: rooms, timezone: timezone, users: users)
@@ -63,6 +65,12 @@ defmodule SllackWeb.ChatRoomLive do
       |> push_event("scroll_messages_to_bottom", %{})
 
     {:noreply, socket}
+  end
+
+  def handle_info(%{event: "presence_diff", payload: diff}, socket) do
+    online_users = OnlineUsers.update(socket.assigns.online_users, diff)
+
+    {:noreply, assign(socket, online_users: online_users)}
   end
 
   def handle_info({:message_deleted, message}, socket) do
