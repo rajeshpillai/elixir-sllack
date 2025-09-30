@@ -26,8 +26,13 @@ defmodule SllackWeb.ChatRoomLive do
 
     {:noreply,
      socket
-     |> assign(room: room, hide_topic?: false, page_title: "#" <> room.name, messages: messages)
-     |> assign_message_form(Chat.change_message(%Message{}))
+      |> assign(
+        room: room,
+        hide_topic?: false,
+        page_title: "#" <> room.name
+      )
+      |> stream(:messages, messages, reset: true)
+      |> assign_message_form(Chat.change_message(%Message{}))
     }
 
   end
@@ -45,7 +50,7 @@ defmodule SllackWeb.ChatRoomLive do
       case Chat.create_message(room, message_params, current_user) do
         {:ok, message} ->
           socket
-          |> update(:messages, &(&1 ++ [message]))
+          |> stream_insert(:messages, message)
           |> assign_message_form(Chat.change_message(%Message{}))
 
         {:error, changeset} ->
@@ -128,8 +133,8 @@ defmodule SllackWeb.ChatRoomLive do
             </li>
           <% end %>
         </ul>
-        <div class="flex flex-col grow overflow-auto">
-          <.message :for={message <- @messages} message={message} />
+        <div id="room-messages" class="flex flex-col grow overflow-auto" phx-update="stream">
+          <.message :for={{dom_id, message} <- @streams.messages} message={message} dom_id={dom_id} />
         </div>
         <div class="h-12 bg-white px-4 pb-4">
         <.form
@@ -159,11 +164,12 @@ defmodule SllackWeb.ChatRoomLive do
     """
   end
 
+  attr :dom_id, :string, required: true
   attr :message, Message, required: true
 
   defp message(assigns) do
     ~H"""
-    <div class="relative flex px-4 py-3">
+    <div id={@dom_id} class="relative flex px-4 py-3">
       <div class="h-10 w-10 rounded shrink-0 bg-slate-300"></div>
       <div class="ml-2">
         <div class="-mt-1">
