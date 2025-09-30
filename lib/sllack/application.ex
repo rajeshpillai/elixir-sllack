@@ -15,7 +15,8 @@ defmodule Sllack.Application do
       # Start a worker by calling: Sllack.Worker.start_link(arg)
       # {Sllack.Worker, arg},
       # Start to serve requests, typically the last entry
-      SllackWeb.Endpoint
+      SllackWeb.Presence, # this is needed before Endpoint (TODO: need to verify)
+      SllackWeb.Endpoint,
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

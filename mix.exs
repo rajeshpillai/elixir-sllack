@@ -21,7 +21,7 @@ defmodule Sllack.MixProject do
   def application do
     [
       mod: {Sllack.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :tzdata]
     ]
   end
 

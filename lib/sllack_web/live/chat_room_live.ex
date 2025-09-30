@@ -1,15 +1,28 @@
 defmodule SllackWeb.ChatRoomLive do
   use SllackWeb, :live_view
 
+  alias Sllack.Accounts
   alias Sllack.Chat.Room
   alias Sllack.Chat
   alias Sllack.Chat.Message
   alias Sllack.Accounts.User
+  alias SllackWeb.OnlineUsers
 
   def mount(_params, _session, socket) do
     rooms = Chat.list_rooms()
+    users = Accounts.list_users()
     timezone = get_connect_params(socket)["timezone"] || "UTC"
-    {:ok, assign(socket, rooms: rooms, timezone: timezone)}
+
+    if connected?(socket) do
+      OnlineUsers.track(self(), socket.assigns.current_scope.user)
+    end
+
+    socket =
+      socket
+      |> assign(rooms: rooms, timezone: timezone, users: users)
+      |> assign(:online_users, OnlineUsers.list())
+
+    {:ok, socket}
   end
 
   def handle_params(params, _uri, socket) do
@@ -110,6 +123,20 @@ defmodule SllackWeb.ChatRoomLive do
         <div id="rooms-list">
           <.room_link :for={room <- @rooms} room={room} active={room.id == @room.id} />
         </div>
+        <div class="mt-4">
+          <div class="flex items-center h-8 px-3">
+            <div class="flex items-center grow">
+              <span class="ml-2 leading-none font-medium text-sm">Users</span>
+            </div>
+          </div>
+          <div id="users-list">
+            <.user
+              :for={user <- @users}
+              user={user}
+              online={OnlineUsers.online?(@online_users, user.id)}
+            />
+          </div>
+        </div>
       </div>
     </div>
     <div class="flex flex-col grow shadow-lg">
@@ -161,7 +188,7 @@ defmodule SllackWeb.ChatRoomLive do
             message={message}
             dom_id={dom_id}
             timezone={@timezone}
-         } />
+          />
         </div>
         <div class="h-12 bg-white px-4 pb-4">
         <.form
@@ -230,6 +257,24 @@ defmodule SllackWeb.ChatRoomLive do
     message.inserted_at
       |> Timex.Timezone.convert(timezone)
       |> Timex.format!("%-l:%M %p", :strftime)
+  end
+
+  attr :user, User, required: true
+  attr :online, :boolean, default: false
+
+  defp user(assigns) do
+    ~H"""
+    <.link class="flex items-center h-8 hover:bg-gray-300 text-sm pl-8 pr-3" href="#">
+      <div class="flex justify-center w-4">
+        <%= if @online do %>
+          <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+        <% else %>
+          <span class="w-2 h-2 rounded-full border-2 border-gray-500"></span>
+        <% end %>
+      </div>
+      <span class="ml-2 leading-none">{username(@user)}</span>
+    </.link>
+    """
   end
 
   defp username(user) do
