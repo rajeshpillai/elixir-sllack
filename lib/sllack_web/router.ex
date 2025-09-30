@@ -17,14 +17,14 @@ defmodule SllackWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", SllackWeb do
-    pipe_through :browser
+  # scope "/", SllackWeb do
+  #   pipe_through :browser
 
-    # get "/", PageController, :home
-    live "/", ChatRoomLive
-    live "/rooms/:id", ChatRoomLive
-    live "/rooms/:id/edit", ChatRoomLive.Edit
-  end
+  #   # get "/", PageController, :home
+  #   live "/", ChatRoomLive
+  #   live "/rooms/:id", ChatRoomLive
+  #   live "/rooms/:id/edit", ChatRoomLive.Edit
+  # end
 
   # Other scopes may use custom stacks.
   # scope "/api", SllackWeb do
@@ -57,6 +57,9 @@ defmodule SllackWeb.Router do
       on_mount: [{SllackWeb.UserAuth, :require_authenticated}] do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+      live "/", ChatRoomLive
+      live "/rooms/:id", ChatRoomLive
+      live "/rooms/:id/edit", ChatRoomLive.Edit
     end
 
     post "/users/update-password", UserSessionController, :update_password
