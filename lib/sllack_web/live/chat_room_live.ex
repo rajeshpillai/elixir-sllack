@@ -4,6 +4,7 @@ defmodule SllackWeb.ChatRoomLive do
   alias Sllack.Chat.Room
   # - alias Sllack.Repo
   alias Sllack.Chat
+  alias Sllack.Chat.Message
 
   def mount(_params, _session, socket) do
     rooms = Chat.list_rooms()
@@ -20,7 +21,13 @@ defmodule SllackWeb.ChatRoomLive do
           List.first(socket.assigns.rooms)
       end
 
-    {:noreply, assign(socket, room: room, hide_topic?: false, page_title: "#" <> room.name)}
+    # {:noreply, assign(socket, room: room, hide_topic?: false, page_title: "#" <> room.name)}
+    messages = Chat.list_messages_in_room(room)
+
+    {:noreply,
+     socket
+     |> assign(room: room, hide_topic?: false, page_title: "#" <> room.name, messages: messages)
+     |> assign(:current_scope, socket.assigns[:current_scope])}
   end
 
   def handle_event("toggle-topic", _params, socket) do
@@ -71,28 +78,49 @@ defmodule SllackWeb.ChatRoomLive do
         </div>
       </div>
         <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_scope do %>
-        <li>
-          {@current_scope.user.email}
-        </li>
-        <li>
-          <.link href={~p"/users/settings"}>Settings</.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log-out"} method="delete">Log out</.link>
-        </li>
-      <% else %>
-        <li>
-          <.link href={~p"/users/register"}>Register</.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log-in"}>Log in</.link>
-        </li>
-      <% end %>
-    </ul>
+          <%= if @current_scope do %>
+            <li>
+              {@current_scope.user.email}
+            </li>
+            <li>
+              <.link href={~p"/users/settings"}>Settings</.link>
+            </li>
+            <li>
+              <.link href={~p"/users/log-out"} method="delete">Log out</.link>
+            </li>
+          <% else %>
+            <li>
+              <.link href={~p"/users/register"}>Register</.link>
+            </li>
+            <li>
+              <.link href={~p"/users/log-in"}>Log in</.link>
+            </li>
+          <% end %>
+        </ul>
+        <div class="flex flex-col grow overflow-auto">
+          <.message :for={message <- @messages} message={message} />
+        </div>
     </div>
     </Layouts.app>
 
+    """
+  end
+
+  attr :message, Message, required: true
+
+  defp message(assigns) do
+    ~H"""
+    <div class="relative flex px-4 py-3">
+      <div class="h-10 w-10 rounded shrink-0 bg-slate-300"></div>
+      <div class="ml-2">
+        <div class="-mt-1">
+          <.link class="text-sm font-semibold hover:underline">
+            <span>User</span>
+          </.link>
+          <p class="text-sm">{@message.body}</p>
+        </div>
+      </div>
+    </div>
     """
   end
 
