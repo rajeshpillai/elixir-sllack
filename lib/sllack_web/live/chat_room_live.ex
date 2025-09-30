@@ -30,6 +30,7 @@ defmodule SllackWeb.ChatRoomLive do
 
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash}>
     <div class="flex flex-col shrink-0 w-64 bg-slate-100">
       <div class="flex justify-between items-center shrink-0 h-16 border-b border-slate-300 px-4">
         <div class="flex flex-col gap-1.5">
@@ -70,6 +71,8 @@ defmodule SllackWeb.ChatRoomLive do
         </div>
       </div>
     </div>
+    </Layouts.app>
+
     """
   end
 

@@ -15,9 +15,6 @@ defmodule SllackWeb.ChatRoomLive.Edit do
     {:ok, socket}
   end
 
-  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
-    assign(socket, :form, to_form(changeset))
-  end
 
   def render(assigns) do
     ~H"""
@@ -32,7 +29,7 @@ defmodule SllackWeb.ChatRoomLive.Edit do
         </:actions>
 
       </.header>
-      <.simple_form for={@form} id="room-form">
+      <.simple_form for={@form} id="room-form" phx-change="validate-room" phx-submit="save-room">
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:topic]} type="text" label="Topic" />
         <:actions>
@@ -41,5 +38,33 @@ defmodule SllackWeb.ChatRoomLive.Edit do
       </.simple_form>
     </div>
     """
+  end
+
+  def handle_event("validate-room", %{"room" => room_params}, socket) do
+    changeset =
+      socket.assigns.room
+      |> Chat.change_room(room_params)
+      |> Map.put(:action, :validate)  # This will mark all fields as "touched"
+
+    {:noreply, assign_form(socket, changeset)}
+  end
+
+
+  def handle_event("save-room", %{"room" => room_params}, socket) do
+    case Chat.update_room(socket.assigns.room, room_params) do
+      {:ok, room} ->
+        IO.puts("Saving...")
+        {:noreply,
+        socket
+        |> put_flash(:info, "Room updated successfully")
+        |> push_navigate(to: ~p"/rooms/#{room}")}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign_form(socket, changeset)}
+    end
+  end
+
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
   end
 end
