@@ -6,17 +6,20 @@ defmodule Sllack.Chat do
   import Ecto.Query
 
   def list_messages_in_room(%Room{id: room_id}) do
-    # Message
-    # |> where([m], m.room_id == ^room_id)
-    # |> order_by([m], asc: m.inserted_at, asc: :id)
-    # |> Repo.all()
 
     # OR DSL
-    from(m in Message,
-      where: m.room_id == ^room_id,
-      order_by: [asc: m.inserted_at, asc: :id]
-    )
+    # from(m in Message,
+    #   where: m.room_id == ^room_id,
+    #   order_by: [asc: m.inserted_at, asc: :id]
+    # )
+    # |> Repo.all()
+
+    Message
+    |> where([m], m.room_id == ^room_id)
+    |> order_by([m], asc: m.inserted_at, asc: :id)
+    |> preload(:user)
     |> Repo.all()
+
 
   end
 

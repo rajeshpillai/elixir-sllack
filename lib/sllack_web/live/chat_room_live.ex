@@ -80,7 +80,7 @@ defmodule SllackWeb.ChatRoomLive do
         <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
           <%= if @current_scope do %>
             <li>
-              {@current_scope.user.email}
+              {username(@current_scope.user)}
             </li>
             <li>
               <.link href={~p"/users/settings"}>Settings</.link>
@@ -115,13 +115,20 @@ defmodule SllackWeb.ChatRoomLive do
       <div class="ml-2">
         <div class="-mt-1">
           <.link class="text-sm font-semibold hover:underline">
-            <span>User</span>
+            <span>{username(@message.user)}</span>
           </.link>
           <p class="text-sm">{@message.body}</p>
         </div>
       </div>
     </div>
     """
+  end
+
+  defp username(user) do
+    user.email
+    |> String.split("@")
+    |> List.first()
+    |> String.capitalize()
   end
 
   attr :active, :boolean, required: true
