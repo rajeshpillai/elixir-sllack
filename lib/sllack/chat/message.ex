@@ -14,10 +14,9 @@ defmodule Sllack.Chat.Message do
   end
 
   @doc false
-  def changeset(message, attrs, user_scope) do
+  def changeset(message, attrs) do
     message
     |> cast(attrs, [:body])
     |> validate_required([:body])
-    |> put_change(:user_id, user_scope.user.id)
   end
 end
