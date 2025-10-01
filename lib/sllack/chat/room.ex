@@ -2,11 +2,14 @@ defmodule Sllack.Chat.Room do
   use Ecto.Schema
   import Ecto.Changeset
   alias Sllack.Chat.Message
+  alias Sllack.Accounts.User
+  alias Sllack.Chat.RoomMembership
 
   schema "rooms" do
     field :name, :string
     field :topic, :string
 
+    many_to_many :members, User, join_through: RoomMembership
     has_many :messages, Message
 
     timestamps(type: :utc_datetime)

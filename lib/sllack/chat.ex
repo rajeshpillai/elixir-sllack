@@ -3,10 +3,13 @@ defmodule Sllack.Chat do
   alias Sllack.Chat.Room
   alias Sllack.Repo
   alias Sllack.Accounts.User
-
+  alias Sllack.Chat.RoomMembership
 
   import Ecto.Query
   @pubsub Sllack.PubSub
+
+
+  import Ecto.Query
 
 
   def subscribe_to_room(room) do
@@ -35,6 +38,10 @@ defmodule Sllack.Chat do
     |> Repo.all()
 
 
+  end
+
+  def join_room!(room, user) do
+    Repo.insert!(%RoomMembership{room: room, user: user})
   end
 
   def list_rooms do
