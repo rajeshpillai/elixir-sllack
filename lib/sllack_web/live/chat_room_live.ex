@@ -115,12 +115,11 @@ defmodule SllackWeb.ChatRoomLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
     <div class="flex flex-col shrink-0 w-64 bg-slate-100">
       <div class="flex justify-between items-center shrink-0 h-16 border-b border-slate-300 px-4">
         <div class="flex flex-col gap-1.5">
           <h1 class="text-lg font-bold text-gray-800">
-            Sllack
+            Slax
           </h1>
         </div>
       </div>
@@ -128,14 +127,39 @@ defmodule SllackWeb.ChatRoomLive do
         <.toggler on_click={toggle_rooms()} dom_id="rooms-toggler" text="Rooms" />
         <div id="rooms-list">
           <.room_link :for={room <- @rooms} room={room} active={room.id == @room.id} />
+
+          <div class="relative">
+            <button
+              class="flex items-center peer h-8 text-sm pl-8 pr-3 hover:bg-slate-300 cursor-pointer w-full"
+              phx-click={JS.toggle(to: "#sidebar-rooms-menu")}
+            >
+              <.icon name="hero-plus" class="h-4 w-4 relative top-px" />
+              <span class="ml-2 leading-none">Add rooms</span>
+            </button>
+
+            <div
+              id="sidebar-rooms-menu"
+              class="hidden cursor-default absolute top-8 right-2 bg-white border-slate-200 border py-3 rounded-lg"
+              phx-click-away={JS.hide()}
+            >
+              <div class="w-full text-left">
+                <.link
+                  class="block select-none cursor-pointer whitespace-nowrap text-gray-800 hover:text-white px-6 py-1 block hover:bg-sky-600"
+                  navigate={~p"/rooms"}
+                >
+                  Browse rooms
+                </.link>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="mt-4">
           <.toggler on_click={toggle_users()} dom_id="users-toggler" text="Users" />
           <div id="users-list">
             <.user
               :for={user <- @users}
-              user={user}
               online={OnlineUsers.online?(@online_users, user.id)}
+              user={user}
             />
           </div>
         </div>
@@ -146,8 +170,11 @@ defmodule SllackWeb.ChatRoomLive do
         <div class="flex flex-col gap-1.5">
           <h1 class="text-sm font-bold leading-none">
             #{@room.name}
-            <.link class="font-normal text-xs text-blue-600 hover:text-blue-700"
-              navigate={~p"/rooms/#{@room}/edit"}>
+
+            <.link
+              class="font-normal text-xs text-blue-600 hover:text-blue-700"
+              navigate={~p"/rooms/#{@room}/edit"}
+            >
               Edit
             </.link>
           </h1>
@@ -162,37 +189,44 @@ defmodule SllackWeb.ChatRoomLive do
             <% end %>
           </div>
         </div>
-      </div>
-        <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-          <%= if @current_scope do %>
-            <li>
-              {username(@current_scope.user)}
-            </li>
-            <li>
-              <.link href={~p"/users/settings"}>Settings</.link>
-            </li>
-            <li>
-              <.link href={~p"/users/log-out"} method="delete">Log out</.link>
-            </li>
-          <% else %>
-            <li>
-              <.link href={~p"/users/register"}>Register</.link>
-            </li>
-            <li>
-              <.link href={~p"/users/log-in"}>Log in</.link>
-            </li>
-          <% end %>
+        <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+          <li class="text-[0.8125rem] leading-6 text-zinc-900">
+            {username(@current_scope.user)}
+          </li>
+          <li>
+            <.link
+              href={~p"/users/settings"}
+              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+            >
+              Settings
+            </.link>
+          </li>
+          <li>
+            <.link
+              href={~p"/users/log_out"}
+              method="delete"
+              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+            >
+              Log out
+            </.link>
+          </li>
         </ul>
-        <div id="room-messages" class="flex flex-col grow overflow-auto" phx-update="stream" phx-hook="RoomMessages">
-          <.message
-            :for={{dom_id, message} <- @streams.messages}
-            current_user={@current_scope && @current_scope.user}
-            message={message}
-            dom_id={dom_id}
-            timezone={@timezone}
-          />
-        </div>
-        <div class="h-12 bg-white px-4 pb-4">
+      </div>
+      <div
+        id="room-messages"
+        class="flex flex-col grow overflow-auto"
+        phx-hook="RoomMessages"
+        phx-update="stream"
+      >
+        <.message
+          :for={{dom_id, message} <- @streams.messages}
+          current_user={@current_scope.user}
+          dom_id={dom_id}
+          message={message}
+          timezone={@timezone}
+        />
+      </div>
+      <div class="h-12 bg-white px-4 pb-4">
         <.form
           id="new-message-form"
           for={@new_message_form}
@@ -216,8 +250,6 @@ defmodule SllackWeb.ChatRoomLive do
         </.form>
       </div>
     </div>
-    </Layouts.app>
-
     """
   end
 
