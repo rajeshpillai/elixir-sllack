@@ -11,6 +11,19 @@ defmodule Sllack.Chat do
 
   import Ecto.Query
 
+  def joined?(%Room{} = room, %User{} = user) do
+    Repo.exists?(
+      from rm in RoomMembership,
+        where: rm.room_id == ^room.id and rm.user_id == ^user.id
+    )
+  end
+
+  def list_joined_rooms(%User{} = user) do
+    user
+    |> Repo.preload(:rooms)
+    |> Map.fetch!(:rooms)
+    |> Enum.sort_by(& &1.name)
+  end
 
   def subscribe_to_room(room) do
     Phoenix.PubSub.subscribe(@pubsub, topic(room.id))

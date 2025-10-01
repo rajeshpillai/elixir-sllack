@@ -9,7 +9,7 @@ defmodule SllackWeb.ChatRoomLive do
   alias SllackWeb.OnlineUsers
 
   def mount(_params, _session, socket) do
-    rooms = Chat.list_rooms()
+    rooms = Chat.list_joined_rooms(socket.assigns.current_scope.user)
     users = Accounts.list_users()
     timezone = get_connect_params(socket)["timezone"] || "UTC"
 
@@ -48,7 +48,8 @@ defmodule SllackWeb.ChatRoomLive do
       |> assign(
         room: room,
         hide_topic?: false,
-        page_title: "#" <> room.name
+        page_title: "#" <> room.name,
+        joined?: Chat.joined?(room, socket.assigns.current_scope.user)
       )
       |> stream(:messages, messages, reset: true)
       |> assign_message_form(Chat.change_message(%Message{}))
@@ -91,12 +92,16 @@ defmodule SllackWeb.ChatRoomLive do
   def handle_event("submit-message", %{"message" => message_params}, socket) do
     %{current_scope: current_scope, room: room} = socket.assigns
     current_user = current_scope.user
-    socket =
+
+    if Chat.joined?(room, current_user)do
       case Chat.create_message(room , message_params, current_user) do
-      {:ok, _message} ->
-        assign_message_form(socket, Chat.change_message(%Message{}))
-      {:error, changeset} ->
-        assign_message_form(socket, changeset)
+        {:ok, _message} ->
+          assign_message_form(socket, Chat.change_message(%Message{}))
+        {:error, changeset} ->
+          assign_message_form(socket, changeset)
+      end
+    else
+      socket
     end
 
     {:noreply, socket}
@@ -226,7 +231,7 @@ defmodule SllackWeb.ChatRoomLive do
           timezone={@timezone}
         />
       </div>
-      <div class="h-12 bg-white px-4 pb-4">
+      <div :if={@joined?} class="h-12 bg-white px-4 pb-4">
         <.form
           id="new-message-form"
           for={@new_message_form}
