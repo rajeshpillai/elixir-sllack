@@ -5,13 +5,20 @@ defmodule SllackWeb.ChatRoomLive.Edit do
 
   def mount(%{"id" => id}, _session, socket) do
     room = Chat.get_room!(id)
-    # {:ok, assign(socket, room: room, page_title: "Edit chat room")}
-    changeset = Chat.change_room(room)
-    socket =
-      socket
-      |> assign(room: room, page_title: "Edit chat room")
-      |> assign_form(changeset)
 
+    # changeset = Chat.change_room(room)
+    socket =
+      if Chat.joined?(room, socket.assigns.current_scope.user) do
+        changeset = Chat.change_room(room)
+
+        socket
+        |> assign(page_title:  "Edit Chat Room", room: room)
+        |> assign_form(changeset)
+      else
+        socket
+        |> put_flash(:error, "You must be a member of the room to edit it.")
+        |> push_navigate(to: ~p"/")
+      end
     {:ok, socket}
   end
 
