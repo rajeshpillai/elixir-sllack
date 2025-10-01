@@ -53,6 +53,8 @@ defmodule SllackWeb.Router do
   scope "/", SllackWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    get "/", RoomController, :redirect_to_first
+
     live_session :require_authenticated_user,
       on_mount: [{SllackWeb.UserAuth, :require_authenticated}] do
       live "/users/settings", UserLive.Settings, :edit

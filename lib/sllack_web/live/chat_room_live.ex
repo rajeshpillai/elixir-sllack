@@ -208,7 +208,7 @@ defmodule SllackWeb.ChatRoomLive do
           </li>
           <li>
             <.link
-              href={~p"/users/log_out"}
+              href={~p"/users/log-out"}
               method="delete"
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
