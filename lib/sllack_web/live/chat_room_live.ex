@@ -23,29 +23,35 @@ defmodule SllackWeb.ChatRoomLive do
       socket
       |> assign(rooms: rooms, timezone: timezone, users: users)
       |> assign(:online_users, OnlineUsers.list())
+      |> stream_configure(:messages,
+        dom_id: fn %Message{id: id} -> "message-#{id}"
+          :unread_marker -> "messages-unread-marker"
+        end
+      )
 
     {:ok, socket}
   end
 
   def handle_params(params, _uri, socket) do
     if socket.assigns[:room], do: Chat.unsubscribe_from_room(socket.assigns.room)
+
+    # room = params |> Map.fetch("id") |> Chat.get_room!()
+
     room =
-      case Map.fetch(params, "id") do
-        {:ok, id} ->
-          Chat.get_room!(id)
+    case Map.fetch(params, "id") do
+      {:ok, id} ->
+        Chat.get_room!(id)
 
-        :error ->
-          List.first(socket.assigns.rooms)
-      end
+      :error ->
+        List.first(socket.assigns.rooms)
+    end
 
-
-    # {:noreply, assign(socket, room: room, hide_topic?: false, page_title: "#" <> room.name)}
-    # messages = Chat.list_messages_in_room(room)
 
     last_read_at = Chat.get_last_read_at(room, socket.assigns.current_scope.user)
-    messages = room
-    |> Chat.list_messages_in_room()
-    |> maybe_insert_unread_marker(last_read_at)
+    messages =
+      room
+      |> Chat.list_messages_in_room()
+      |> maybe_insert_unread_marker(last_read_at)
 
     Chat.subscribe_to_room(room)
     Chat.update_last_read_at(room, socket.assigns.current_scope.user)
@@ -68,17 +74,23 @@ defmodule SllackWeb.ChatRoomLive do
   defp maybe_insert_unread_marker(messages, nil), do: messages
 
   defp maybe_insert_unread_marker(messages, last_read_at) do
+    IO.puts("maybe inserted...")
     {read, unread} = Enum.split_while(messages, &(DateTime.compare(&1.inserted_at, last_read_at) != :gt))
 
     if unread == [] do
+      IO.puts("All read!")
       read
     else
+      IO.puts("inserting unread-marker...")
       read ++ [:unread_marker | unread]
     end
   end
 
   def handle_info({:new_message, message}, socket) do
-    # {:noreply, stream_insert(socket, :messages, message)}
+    if message.room_id == socket.assigns.room.id do
+      Chat.update_last_read_at(socket.assigns.room, socket.assigns.current_scope.user)
+    end
+
     socket =
       socket
       |> stream_insert(:messages, message)
@@ -252,14 +264,32 @@ defmodule SllackWeb.ChatRoomLive do
           phx-hook="RoomMessages"
           phx-update="stream"
         >
-          <.message
-            :for={{dom_id, message} <- @streams.messages}
-            current_user={@current_scope.user}
-            dom_id={dom_id}
-            message={message}
-            timezone={@timezone}
-          />
+        <.message
+          :for={{dom_id, message} <- @streams.messages}
+          current_user={@current_scope.user}
+          dom_id={dom_id}
+          message={message}
+          timezone={@timezone}
+        />
+
+          <%= for {dom_id, message} <- @streams.messages do %>
+            <%= if message == :unread_marker do %>
+              <div id={dom_id} class="w-full flex text-red-500 items-center gap-3 pr-5">
+                <div class="w-full h-px grow bg-red-500"></div>
+                <div class="text-sm">New</div>
+              </div>
+            <% else %>
+            <.message
+              current_user={@current_scope.user}
+              dom_id={dom_id}
+              message={message}
+              timezone={@timezone}
+            />
+          <% end %>
+        <% end %>
+
         </div>
+
         <div :if={@joined?} class="h-12 bg-white px-4 pb-4">
           <.form
             id="new-message-form"

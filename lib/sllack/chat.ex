@@ -25,6 +25,7 @@ defmodule Sllack.Chat do
           from(m in Message, where: m.room_id == ^room.id, select: max(m.inserted_at))
           |> Repo.one()
 
+        IO.puts("Updating last_read_at to #{inspect(timestamp)}")
         membership
         |> change(%{last_read_at: timestamp})
         |> Repo.update()
