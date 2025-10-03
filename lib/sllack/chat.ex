@@ -8,12 +8,34 @@ defmodule Sllack.Chat do
   import Ecto.Query
   @pubsub Sllack.PubSub
 
-
   import Ecto.Query
+  import Ecto.Changeset
 
+  def get_last_read_at(%Room{} = room, user) do
+    case get_membership(room, user) do
+     %RoomMembership{} = membership -> membership.last_read_at
+      nil -> nil
+    end
+  end
+
+  def update_last_read_at(room, user) do
+    case get_membership(room, user) do
+      %RoomMembership{} = membership ->
+        timestamp =
+          from(m in Message, where: m.room_id == ^room.id, select: max(m.inserted_at))
+          |> Repo.one()
+
+        membership
+        |> change(%{last_read_at: timestamp})
+        |> Repo.update()
+
+      nil ->
+        nil
+    end
+  end
 
   def toggle_room_membership(%Room{} = room, %User{} = user) do
-    case Repo.get_by(RoomMembership, room_id: room.id, user_id: user.id) do
+    case get_membership(room, user) do
       %RoomMembership{} = membership ->
         Repo.delete(membership)
         {room, false}
@@ -22,6 +44,10 @@ defmodule Sllack.Chat do
         join_room!(room, user)
         {room, true}
     end
+  end
+
+  defp get_membership(room, user) do
+    Repo.get_by(RoomMembership, room_id: room.id, user_id: user.id)
   end
 
   def list_rooms_with_joined(%User{} = user) do

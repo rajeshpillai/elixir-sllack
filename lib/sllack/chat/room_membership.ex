@@ -10,6 +10,8 @@ defmodule Sllack.Chat.RoomMembership do
     belongs_to :room, Room
     belongs_to :user, User
 
+    field :last_read_at, :utc_datetime_usec
+
     timestamps(type: :utc_datetime)
   end
 
