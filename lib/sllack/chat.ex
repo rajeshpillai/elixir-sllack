@@ -5,11 +5,25 @@ defmodule Sllack.Chat do
   alias Sllack.Accounts.User
   alias Sllack.Chat.RoomMembership
 
-  import Ecto.Query
   @pubsub Sllack.PubSub
 
   import Ecto.Query
+
+  import Ecto.Query
   import Ecto.Changeset
+
+  def list_joined_rooms_with_unread_counts(%User{} = user) do
+    from(room in Room,
+      join: membership in assoc(room, :memberships),
+      where: membership.user_id == ^user.id,
+      left_join: message in assoc(room, :messages),
+      on: message.inserted_at > membership.last_read_at,
+      group_by: room.id,
+      select: {room, count(message.id)},
+      order_by: [asc: room.name]
+    )
+    |> Repo.all()
+  end
 
   def get_last_read_at(%Room{} = room, user) do
     case get_membership(room, user) do
@@ -145,7 +159,7 @@ defmodule Sllack.Chat do
            %Message{room: room, user: user}
            |> Message.changeset(attrs)
            |> Repo.insert() do
-                Phoenix.PubSub.broadcast(@pubsub, topic(room.id), {:new_message, message})
+                Phoenix.PubSub.broadcast!(@pubsub, topic(room.id), {:new_message, message})
         {:ok, message}
       end
   end
@@ -154,7 +168,7 @@ defmodule Sllack.Chat do
     message = Repo.get_by(Message, id: id, user_id: user_id)
     Repo.delete(message)
 
-    Phoenix.PubSub.broadcast(@pubsub, topic(message.room_id), {:message_deleted, message})
+    Phoenix.PubSub.broadcast!(@pubsub, topic(message.room_id), {:message_deleted, message})
   end
 
 end
