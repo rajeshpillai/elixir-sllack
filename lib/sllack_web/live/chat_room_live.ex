@@ -195,7 +195,8 @@ defmodule SllackWeb.ChatRoomLive do
         </div>
       </div>
     </div>
-    <.modal id="new-room-modal">
+    <.modal id="new-room-modal" show={@live_action == "new"}
+      on_cancel={JS.navigate(~p"/rooms/#{@room}")}>
       <.header>New chat room</.header>
       <.simple_form
         for={@new_room_form}
