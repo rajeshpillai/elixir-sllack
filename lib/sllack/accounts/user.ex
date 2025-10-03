@@ -29,6 +29,14 @@ defmodule Sllack.Accounts.User do
       uniqueness of the email, useful when displaying live validations.
       Defaults to `true`.
   """
+
+  def registration_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:email])
+    |> validate_email(opts)
+
+   end
+
   def email_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email])

@@ -18,7 +18,7 @@ defmodule SllackWeb.ChatRoomLive do
       <div class="flex justify-between items-center shrink-0 h-16 border-b border-slate-300 px-4">
         <div class="flex flex-col gap-1.5">
           <h1 class="text-lg font-bold text-gray-800">
-            Slax
+            Sllack
           </h1>
         </div>
       </div>
@@ -103,7 +103,16 @@ defmodule SllackWeb.ChatRoomLive do
         </div>
         <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
           <li class="text-[0.8125rem] leading-6 text-zinc-900">
-            {@current_scope.user.username}
+            <div class="text-sm leading-10">
+             <.link
+               class="flex gap-4 items-center"
+               phx-click="show-profile"
+               phx-value-user-id={@current_scope.user.id}
+             >
+               <img src={~p"/images/avatar.png"} class="h-8 w-8 rounded" />
+               <span class="hover:underline">{@current_scope.user.username}</span>
+             </.link>
+           </div>
           </li>
           <li>
             <.link
@@ -115,7 +124,7 @@ defmodule SllackWeb.ChatRoomLive do
           </li>
           <li>
             <.link
-              href={~p"/users/log_out"}
+              href={~p"/users/log-out"}
               method="delete"
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
@@ -198,6 +207,11 @@ defmodule SllackWeb.ChatRoomLive do
         </div>
       </div>
     </div>
+
+    <%= if assigns[:profile] do %>
+      <.live_component id="profile" module={SllackWeb.ChatRoomLive.ProfileComponent} user={@profile} />
+    <% end %>
+
     <.modal id="new-room-modal" show={@live_action == "new"}
       on_cancel={JS.navigate(~p"/rooms/#{@room}")}>
       <.header>New chat room</.header>
@@ -247,11 +261,20 @@ defmodule SllackWeb.ChatRoomLive do
       >
         <.icon name="hero-trash" class="h-4 w-4" />
       </button>
-      <img class="h-10 w-10 rounded shrink-0" src={~p"/images/avatar.png"} />
+      <img
+        class="h-10 w-10 rounded cursor-pointer"
+        phx-click="show-profile"
+        phx-value-user-id={@message.user.id}
+        src={~p"/images/avatar.png"}
+      />
       <div class="ml-2">
         <div class="-mt-1">
-          <.link class="text-sm font-semibold hover:underline">
-            <span>{@message.user.username}</span>
+           <.link
+            phx-click="show-profile"
+            phx-value-user-id={@message.user.id}
+            class="text-sm font-semibold hover:underline"
+          >
+            {@message.user.username}
           </.link>
           <span :if={@timezone} class="ml-1 text-xs text-gray-500">
             {message_timestamp(@message, @timezone)}
@@ -337,8 +360,7 @@ defmodule SllackWeb.ChatRoomLive do
 
     Enum.each(rooms, fn {chat, _} -> Chat.subscribe_to_room(chat) end)
 
-    socket =
-      socket
+    socket
       |> assign(rooms: rooms, timezone: timezone, users: users)
       |> assign(online_users: OnlineUsers.list())
       |> assign_room_form(Chat.change_room(%Room{}))
@@ -425,6 +447,12 @@ defmodule SllackWeb.ChatRoomLive do
     assign(socket, :new_message_form, to_form(changeset))
   end
 
+
+  def handle_event("show-profile", %{"user-id" => user_id}, socket) do
+    user = Accounts.get_user!(user_id)
+    {:noreply, assign(socket, :profile, user)}
+  end
+
   def handle_event("delete-message", %{"id" => id}, socket) do
     Chat.delete_message_by_id(id, socket.assigns.current_scope.user)
 
@@ -443,6 +471,10 @@ defmodule SllackWeb.ChatRoomLive do
       )
 
     {:noreply, socket}
+  end
+
+  def handle_event("close-profile", _, socket) do
+    {:noreply, assign(socket, :profile, nil)}
   end
 
   def handle_event("save-room", %{"room" => room_params}, socket) do
