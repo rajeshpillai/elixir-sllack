@@ -52,6 +52,9 @@ defmodule SllackWeb do
     quote do
       use Phoenix.LiveView
 
+      # Our socket helpers
+      import SllackWeb.SocketHelpers
+
       unquote(html_helpers())
     end
   end
