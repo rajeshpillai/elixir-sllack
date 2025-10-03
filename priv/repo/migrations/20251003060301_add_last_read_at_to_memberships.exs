@@ -3,7 +3,7 @@ defmodule Sllack.Repo.Migrations.AddLastReadAtToMemberships do
 
   def change do
     alter table(:room_memberships) do
-      add :last_read_at, :utc_datetime_usec
+      add :last_read_at, :utc_datetime
     end
 
   end

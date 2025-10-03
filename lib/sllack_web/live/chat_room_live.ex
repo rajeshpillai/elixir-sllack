@@ -38,10 +38,17 @@ defmodule SllackWeb.ChatRoomLive do
           List.first(socket.assigns.rooms)
       end
 
+
     # {:noreply, assign(socket, room: room, hide_topic?: false, page_title: "#" <> room.name)}
-    messages = Chat.list_messages_in_room(room)
+    # messages = Chat.list_messages_in_room(room)
+
+    last_read_at = Chat.get_last_read_at(room, socket.assigns.current_scope.user)
+    messages = room
+    |> Chat.list_messages_in_room()
+    |> maybe_insert_unread_marker(last_read_at)
 
     Chat.subscribe_to_room(room)
+    Chat.update_last_read_at(room, socket.assigns.current_scope.user)
 
     {:noreply,
      socket
@@ -56,6 +63,18 @@ defmodule SllackWeb.ChatRoomLive do
       |> push_event("scroll_messages_to_bottom", %{})
     }
 
+  end
+
+  defp maybe_insert_unread_marker(messages, nil), do: messages
+
+  defp maybe_insert_unread_marker(messages, last_read_at) do
+    {read, unread} = Enum.split_while(messages, &(DateTime.compare(&1.inserted_at, last_read_at) != :gt))
+
+    if unread == [] do
+      read
+    else
+      read ++ [:unread_marker | unread]
+    end
   end
 
   def handle_info({:new_message, message}, socket) do
