@@ -25,6 +25,16 @@ defmodule SllackWeb.ChatRoomLive.Index do
                 </span>
               </div>
               <div class="text-gray-500 text-sm">
+                <% joined? = Chat.joined?(room, @current_scope.user) %>
+                <%= if joined? do %>
+                  <span class="text-green-600 font-bold">
+                    Joined
+                  </span>
+                <% end %>
+
+                <%= if joined? and room.topic do %>
+                  <span class="mx-1">|</span>
+                <% end %>
                 <%= if room.topic do %>
                   {room.topic}
                 <% end %>
