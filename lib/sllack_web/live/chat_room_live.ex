@@ -43,7 +43,14 @@ defmodule SllackWeb.ChatRoomLive do
               phx-click-away={JS.hide()}
             >
               <div class="w-full text-left">
-                <.link
+
+                 <.link
+                  class="block select-none cursor-pointer whitespace-nowrap text-gray-800 hover:text-white px-6 py-1 block hover:bg-sky-600"
+                  phx-click={show_modal("new-room-modal")}
+                >
+                  Create a new room
+                </.link>
+                 <.link
                   class="block select-none cursor-pointer whitespace-nowrap text-gray-800 hover:text-white px-6 py-1 block hover:bg-sky-600"
                   navigate={~p"/rooms"}
                 >
@@ -187,6 +194,10 @@ defmodule SllackWeb.ChatRoomLive do
         </div>
       </div>
     </div>
+    <.modal id="new-room-modal">
+      <.header>New chat room</.header>
+      (Form goes here)
+    </.modal>
     """
   end
 
