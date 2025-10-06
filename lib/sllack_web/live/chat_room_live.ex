@@ -223,9 +223,17 @@ defmodule SllackWeb.ChatRoomLive do
     <.modal id="new-room-modal" show={@live_action == "new"}
       on_cancel={JS.navigate(~p"/rooms/#{@room}")}>
       <.header>New chat room</.header>
-      <.room_form form={@new_room_form} />
+      <.live_component
+        module={SllackWeb.ChatRoomLive.FormComponent}
+        id="new-room-form-component"
+        current_user={@current_scope.user}
+      />
+
     </.modal>
+
     </Layouts.app>
+
+
     """
   end
 
@@ -397,7 +405,6 @@ defmodule SllackWeb.ChatRoomLive do
     socket
       |> assign(rooms: rooms, timezone: timezone, users: users)
       |> assign(online_users: OnlineUsers.list())
-      |> assign_room_form(Chat.change_room(%Room{}))
       |> stream_configure(:messages,
         dom_id: fn
           %Message{id: id} -> "messages-#{id}"
@@ -408,9 +415,9 @@ defmodule SllackWeb.ChatRoomLive do
       |> ok()
   end
 
-  defp assign_room_form(socket, changeset) do
-    assign(socket, :new_room_form, to_form(changeset))
-  end
+  # defp assign_room_form(socket, changeset) do
+  #   assign(socket, :new_room_form, to_form(changeset))
+  # end
 
   def handle_params(params, _uri, socket) do
     room = params |> Map.fetch!("id") |> Chat.get_room!()
@@ -511,20 +518,7 @@ defmodule SllackWeb.ChatRoomLive do
     {:noreply, assign(socket, :profile, nil)}
   end
 
-  def handle_event("save-room", %{"room" => room_params}, socket) do
-    case Chat.create_room(room_params) do
-      {:ok, room} ->
-        Chat.join_room!(room, socket.assigns.current_scope.user)
 
-        {:noreply,
-         socket
-         |> put_flash(:info, "Created room")
-         |> push_navigate(to: ~p"/rooms/#{room}")}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign_room_form(socket, changeset)}
-    end
-  end
 
   def handle_event("submit-message", %{"message" => message_params}, socket) do
      %{current_scope: current_scope, room: room} = socket.assigns
@@ -556,14 +550,7 @@ defmodule SllackWeb.ChatRoomLive do
     {:noreply, assign_message_form(socket, changeset)}
   end
 
-  def handle_event("validate-room", %{"room" => room_params}, socket) do
-    changeset =
-      socket.assigns.room
-      |> Chat.change_room(room_params)
-      |> Map.put(:action, :validate)
 
-    {:noreply, assign_room_form(socket, changeset)}
-  end
 
   def handle_info({:new_message, message}, socket) do
     room = socket.assigns.room

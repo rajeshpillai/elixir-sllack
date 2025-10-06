@@ -6,8 +6,14 @@ defmodule SllackWeb.ChatRoomLive.Index do
   def render(assigns) do
     ~H"""
     <main class="flex-1 p-6 max-w-4xl mx-auto">
-      <div class="mb-4">
+      <div class="flex justify-between mb-4 items-center">
         <h1 class="text-xl font-semibold">{@page_title}</h1>
+        <button
+          phx-click={show_modal("new-room-modal")}
+          class="bg-white font-semibold py-2 px-4 border border-slate-400 rounded shadow-sm"
+        >
+          Create room
+        </button>
       </div>
       <div class="bg-slate-50 border rounded">
         <div id="rooms" class="divide-y" phx-update="stream">
@@ -15,7 +21,6 @@ defmodule SllackWeb.ChatRoomLive.Index do
             :for={{id, {room, joined?}} <- @streams.rooms}
             class="cursor-pointer p-4 flex justify-between items-center group first:rounded-t last:rounded-b"
             id={id}
-            navigate={~p"/rooms/#{room}"}
             phx-click={open_room(room)}
             phx-keydown={open_room(room)}
             phx-key="Enter"
@@ -29,25 +34,23 @@ defmodule SllackWeb.ChatRoomLive.Index do
                 </span>
               </div>
               <div class="text-gray-500 text-sm">
-                <% joined? = Chat.joined?(room, @current_scope.user) %>
                 <%= if joined? do %>
-                  <span class="text-green-600 font-bold">
-                    Joined
-                  </span>
+                  <span class="text-green-600 font-bold">✓ Joined</span>
                 <% end %>
-
-                <%= if joined? and room.topic do %>
-                  <span class="mx-1">|</span>
+                <%= if joined? && room.topic do %>
+                  <span class="mx-1">·</span>
                 <% end %>
                 <%= if room.topic do %>
                   {room.topic}
                 <% end %>
               </div>
             </div>
+
             <button
               class="opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus:opacity-100 bg-white hover:bg-gray-100 border border-gray-400 text-gray-700 px-3 py-1.5 w-24 rounded-sm font-bold"
               phx-click="toggle-room-membership"
-              phx-value-id={room.id}>
+              phx-value-id={room.id}
+            >
               <%= if joined? do %>
                 Leave
               <% else %>
@@ -58,6 +61,16 @@ defmodule SllackWeb.ChatRoomLive.Index do
         </div>
       </div>
     </main>
+
+    <.modal id="new-room-modal">
+      <.header>New chat room</.header>
+
+      <.live_component
+        module={SllackWeb.ChatRoomLive.FormComponent}
+        id="new-room-form-component"
+        current_user={@current_scope.user}
+      />
+    </.modal>
     """
   end
 

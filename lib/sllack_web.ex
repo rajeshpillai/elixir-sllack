@@ -63,6 +63,8 @@ defmodule SllackWeb do
     quote do
       use Phoenix.LiveComponent
 
+      import SllackWeb.SocketHelpers
+
       unquote(html_helpers())
     end
   end
