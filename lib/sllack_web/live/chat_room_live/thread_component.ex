@@ -28,8 +28,27 @@ defmodule SllackWeb.ChatRoomLive.ThreadComponent do
             in_thread?={true}
           />
         </div>
+        <div id="thread-replies" phx-update="stream">
+          <.message
+            :for={{dom_id, reply} <- @streams.replies}
+            current_user={@current_user}
+            dom_id={dom_id}
+            message={reply}
+            in_thread?
+            timezone={@timezone}
+          />
+        </div>
       </div>
     </div>
     """
+  end
+
+  # As mount/3 doesn't have access to the assigns that are passed to the component,
+  # we initialize the stream in update/2.
+  def update(assigns, socket) do
+    socket
+    |> stream(:replies, assigns.message.replies, reset: true)
+    |> assign(assigns)
+    |> ok()
   end
 end

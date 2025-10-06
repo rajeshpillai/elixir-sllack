@@ -4,6 +4,7 @@ defmodule Sllack.Chat do
   alias Sllack.Repo
   alias Sllack.Accounts.User
   alias Sllack.Chat.RoomMembership
+  alias Sllack.Chat.Reply
 
   @pubsub Sllack.PubSub
 
@@ -13,9 +14,10 @@ defmodule Sllack.Chat do
   import Ecto.Changeset
 
   def get_message!(id) do
+
     Message
     |> where([m], m.id == ^id)
-    |> preload(:user)
+    |> preload_message_user_and_replies()
     |> Repo.one!()
   end
 
@@ -119,10 +121,15 @@ defmodule Sllack.Chat do
     Message
     |> where([m], m.room_id == ^room_id)
     |> order_by([m], asc: m.inserted_at, asc: :id)
-    |> preload(:user)
+    |> preload_message_user_and_replies()
     |> Repo.all()
 
+  end
 
+  defp preload_message_user_and_replies(message_query) do
+    replies_query = from r in Reply, order_by: [asc: :inserted_at, asc: :id]
+
+    preload(message_query, [:user, replies: ^{replies_query, [:user]}])
   end
 
   def join_room!(room, user) do
@@ -158,12 +165,9 @@ defmodule Sllack.Chat do
   end
 
   def create_message(room, attrs, user) do
-    # %Message{room: room, user: user}
-    # |> Message.changeset(attrs)
-    # |> Repo.insert()
 
     with {:ok, message} <-
-           %Message{room: room, user: user}
+           %Message{room: room, user: user, replies: []}
            |> Message.changeset(attrs)
            |> Repo.insert() do
                 Phoenix.PubSub.broadcast!(@pubsub, topic(room.id), {:new_message, message})
