@@ -36,7 +36,7 @@ defmodule SllackWeb.ChatRoomLive.ProfileComponent do
             <.form
               for={%{}}
               phx-change="validate-avatar"
-              phx-submit="submit-avatar")
+              phx-submit="submit-avatar"
               phx-target={@myself}
             >
               <div class="mb-4">

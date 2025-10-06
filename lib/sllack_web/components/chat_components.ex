@@ -2,7 +2,6 @@ defmodule SllackWeb.ChatComponents do
   use SllackWeb, :html
 
   alias Sllack.Accounts.User
-  alias Sllack.Chat.Message
 
   import SllackWeb.UserComponents
 
