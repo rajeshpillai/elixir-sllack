@@ -107,7 +107,7 @@ defmodule SllackWeb.ChatRoomLive do
              <.link
                class="flex gap-4 items-center"
                phx-click="show-profile"
-               phx-value-user-id={@current_scope.user.id}
+               phx-value-user-id={@current_scope && @current_scope.user.id}
              >
                <.user_avatar user={@current_scope.user} class="h-8 w-8 rounded" />
                <span class="hover:underline">{@current_scope.user.username}</span>
@@ -406,6 +406,7 @@ defmodule SllackWeb.ChatRoomLive do
     end
 
     OnlineUsers.subscribe()
+    Accounts.subscribe_to_user_avatars()
 
     Enum.each(rooms, fn {chat, _} -> Chat.subscribe_to_room(chat) end)
 
@@ -596,6 +597,32 @@ defmodule SllackWeb.ChatRoomLive do
 
     {:noreply, assign(socket, online_users: online_users)}
   end
+
+  def handle_info({:updated_avatar, user}, socket) do
+    IO.puts("Received updated_avatar for user #{user.id}")
+    socket
+    |> maybe_update_profile(user)
+    |> maybe_update_current_user(user)
+    |> push_event("update_avatar", %{user_id: user.id, avatar_path: user.avatar_path})
+    |> noreply()
+  end
+
+  defp maybe_update_profile(socket, user) do
+    if socket.assigns[:profile] && socket.assigns.profile.id == user.id do
+      assign(socket, :profile, user)
+    else
+      socket
+    end
+  end
+
+  defp maybe_update_current_user(socket, user) do
+    if socket.assigns.current_scope.user.id == user.id do
+      assign(socket, :current_scope, %{user: user})
+    else
+      socket
+    end
+  end
+
 
   defp toggle_rooms do
     JS.toggle(to: "#rooms-toggler-chevron-down")
