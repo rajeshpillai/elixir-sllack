@@ -217,7 +217,12 @@ defmodule SllackWeb.ChatRoomLive do
     </div>
 
     <%= if assigns[:profile] do %>
-      <.live_component id="profile" module={SllackWeb.ChatRoomLive.ProfileComponent} user={@profile} />
+      <.live_component
+        id="profile"
+        module={SllackWeb.ChatRoomLive.ProfileComponent}
+        user={@profile}
+        current_user={@current_scope.user}
+      />
     <% end %>
 
     <.modal id="new-room-modal" show={@live_action == "new"}
