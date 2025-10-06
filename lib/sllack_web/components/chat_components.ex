@@ -35,6 +35,7 @@ defmodule SllackWeb.ChatComponents do
           data-confirm="Are you sure?"
           phx-click="delete-message"
           phx-value-id={@message.id}
+          phx-value-type={@message.__struct__ |> Module.split() |> List.last()}
         >
           <.icon name="hero-trash" class="h-4 w-4" />
         </button>
