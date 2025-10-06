@@ -12,10 +12,17 @@ defmodule Sllack.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :avatar_path, :string
 
     many_to_many :rooms, Room, join_through: RoomMembership
 
     timestamps(type: :utc_datetime)
+  end
+
+
+  def avatar_changeset(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:avatar_path])
   end
 
   @doc """

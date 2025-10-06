@@ -307,7 +307,7 @@ defmodule SllackWeb.ChatRoomLive do
         class="h-10 w-10 rounded cursor-pointer"
         phx-click="show-profile"
         phx-value-user-id={@message.user.id}
-        src={~p"/images/avatar.png"}
+        src={user_avatar_path(@message.user)}
       />
       <div class="ml-2">
         <div class="-mt-1">
@@ -326,6 +326,17 @@ defmodule SllackWeb.ChatRoomLive do
       </div>
     </div>
     """
+  end
+
+
+  defp user_avatar_path(user) do
+    # In a real app, you might have user-specific avatars.
+    # For simplicity, we'll use a placeholder image.
+    if user.avatar_path do
+      ~p"/uploads/#{user.avatar_path}"
+    else
+      ~p"/images/avatar.png"
+    end
   end
 
   attr :count, :integer, required: true

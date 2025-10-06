@@ -10,6 +10,12 @@ defmodule Sllack.Accounts do
 
   ## Database getters
 
+  def save_user_avatar_path(user, avatar_path) do
+    user
+    |> User.avatar_changeset(%{avatar_path: avatar_path})
+    |> Repo.update()
+  end
+
   def list_users do
     Repo.all(from u in User, order_by: [asc: :email])
   end
