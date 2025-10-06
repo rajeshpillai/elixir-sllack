@@ -12,6 +12,13 @@ defmodule Sllack.Chat do
   import Ecto.Query
   import Ecto.Changeset
 
+  def get_message!(id) do
+    Message
+    |> where([m], m.id == ^id)
+    |> preload(:user)
+    |> Repo.one!()
+  end
+
   def list_joined_rooms_with_unread_counts(%User{} = user) do
     from(room in Room,
       join: membership in assoc(room, :memberships),
