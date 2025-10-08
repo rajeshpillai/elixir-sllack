@@ -17,10 +17,30 @@ defmodule Sllack.Chat do
   @room_page_size 10
 
   def add_reaction(emoji, %Message{} = message, %User{} = user) do
-    %Reaction{message_id: message.id, user_id: user.id}
-    |> Reaction.changeset(%{emoji: emoji})
-    |> Repo.insert()
+    with {:ok, reaction} <-
+           %Reaction{message_id: message.id, user_id: user.id}
+           |> Reaction.changeset(%{emoji: emoji})
+           |> Repo.insert() do
+      Phoenix.PubSub.broadcast!(@pubsub, topic(message.room_id), {:added_reaction, reaction})
+
+      {:ok, reaction}
+    end
   end
+
+  def remove_reaction(emoji, %Message{} = message, %User{} = user) do
+    with %Reaction{} = reaction <-
+           Repo.one(
+             from(r in Reaction,
+               where: r.message_id == ^message.id and r.user_id == ^user.id and r.emoji == ^emoji
+             )
+           ),
+         {:ok, reaction} <- Repo.delete(reaction) do
+      Phoenix.PubSub.broadcast!(@pubsub, topic(message.room_id), {:removed_reaction, reaction})
+
+      {:ok, reaction}
+    end
+  end
+
 
   def count_room_pages do
     ceil(Repo.aggregate(Room, :count) / @room_page_size)
@@ -60,6 +80,7 @@ defmodule Sllack.Chat do
     Message
     |> where([m], m.id == ^id)
     |> preload_message_user_and_replies()
+    |> preload_reactions()
     |> Repo.one!()
   end
 
