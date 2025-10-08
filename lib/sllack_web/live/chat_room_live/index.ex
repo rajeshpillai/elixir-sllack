@@ -122,7 +122,7 @@ defmodule SllackWeb.ChatRoomLive.Index do
       |> ok()
   end
 
-  def handle_params(params, uri, socket) do
+  def handle_params(params, _uri, socket) do
     page = params |> Map.get("page", "1") |> String.to_integer()
     rooms = Chat.list_rooms_with_joined(page, socket.assigns.current_scope.user)
     socket

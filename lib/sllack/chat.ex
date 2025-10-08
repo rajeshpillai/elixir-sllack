@@ -147,7 +147,7 @@ defmodule Sllack.Chat do
 
   defp topic(room_id), do: "chat_room:#{room_id}"
 
-  def list_messages_in_room(%Room{id: room_id}) do
+  def list_messages_in_room(%Room{id: room_id}, opts \\ []) do
 
     # OR DSL
     # from(m in Message,
@@ -158,9 +158,10 @@ defmodule Sllack.Chat do
 
     Message
     |> where([m], m.room_id == ^room_id)
-    |> order_by([m], asc: m.inserted_at, asc: :id)
+    |> order_by([m], desc: m.inserted_at, desc: :id)
     |> preload_message_user_and_replies()
-    |> Repo.all()
+    |> Repo.paginate(after: opts[:after], limit: 3, cursor_fields: [inserted_at: :desc, id: :desc]
+    )
 
   end
 
