@@ -251,6 +251,8 @@ defmodule SllackWeb.ChatRoomLive do
 
     </.modal>
 
+     <div id="emoji-picker-wrapper" class="absolute" phx-update="ignore"></div>
+
     </Layouts.app>
 
 
