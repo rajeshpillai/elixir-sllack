@@ -26,10 +26,12 @@ import {hooks as colocatedHooks} from "phoenix-colocated/sllack"
 import topbar from "../vendor/topbar"
 import RoomMessages from "./hooks/room-messages"
 import ChatMessageTextarea from "./hooks/chat-message-textarea"
+import Thread from "./hooks/thread"
 
 const hooks = {
   RoomMessages,
-  ChatMessageTextarea
+  ChatMessageTextarea,
+  Thread
 }
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
