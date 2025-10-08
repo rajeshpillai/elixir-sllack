@@ -70,7 +70,8 @@ defmodule Sllack.MixProject do
       {:timex, "~> 3.7" },
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
-       {:faker, "~> 0.19.0-alpha.1", only: :dev}
+      {:faker, "~> 0.19.0-alpha.1", only: :dev},
+      {:paginator, "~> 1.2.0"}
     ]
   end
 
