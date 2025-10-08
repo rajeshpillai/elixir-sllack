@@ -4,6 +4,7 @@ defmodule Sllack.Accounts.User do
 
   alias Sllack.Chat.Room
   alias Sllack.Chat.RoomMembership
+  alias Sllack.Chat.Reaction
 
   schema "users" do
     field :email, :string
@@ -15,6 +16,7 @@ defmodule Sllack.Accounts.User do
     field :avatar_path, :string
 
     many_to_many :rooms, Room, join_through: RoomMembership
+    has_many :reactions, Reaction
 
     timestamps(type: :utc_datetime)
   end

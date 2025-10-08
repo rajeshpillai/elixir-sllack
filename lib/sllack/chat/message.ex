@@ -5,12 +5,14 @@ defmodule Sllack.Chat.Message do
   alias Sllack.Accounts.User
   alias Sllack.Chat.Room
   alias Sllack.Chat.Reply
+  alias Sllack.Chat.Reaction
 
   schema "messages" do
     field :body, :string
     belongs_to :user, User
     belongs_to :room, Room
     has_many :replies, Reply
+    has_many :reactions, Reaction
 
     timestamps(type: :utc_datetime)
   end
