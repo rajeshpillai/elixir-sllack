@@ -5,6 +5,7 @@ defmodule Sllack.Chat do
   alias Sllack.Accounts.User
   alias Sllack.Chat.RoomMembership
   alias Sllack.Chat.Reply
+  alias Sllack.Chat.Reaction
 
   @pubsub Sllack.PubSub
 
@@ -14,6 +15,12 @@ defmodule Sllack.Chat do
   import Ecto.Changeset
 
   @room_page_size 10
+
+  def add_reaction(emoji, %Message{} = message, %User{} = user) do
+    %Reaction{message_id: message.id, user_id: user.id}
+    |> Reaction.changeset(%{emoji: emoji})
+    |> Repo.insert()
+  end
 
   def count_room_pages do
     ceil(Repo.aggregate(Room, :count) / @room_page_size)
@@ -160,9 +167,16 @@ defmodule Sllack.Chat do
     |> where([m], m.room_id == ^room_id)
     |> order_by([m], desc: m.inserted_at, desc: :id)
     |> preload_message_user_and_replies()
+    |> preload_reactions()
     |> Repo.paginate(after: opts[:after], limit: 50, cursor_fields: [inserted_at: :desc, id: :desc]
     )
 
+  end
+
+  defp preload_reactions(message_query) do
+    reactions_query = from r in Reaction, order_by: [asc: :id]
+
+    preload(message_query, reactions: ^reactions_query)
   end
 
   defp preload_message_user_and_replies(message_query) do
@@ -206,7 +220,7 @@ defmodule Sllack.Chat do
   def create_message(room, attrs, user) do
 
     with {:ok, message} <-
-           %Message{room: room, user: user, replies: []}
+           %Message{room: room, user: user, replies: [], reactions: []}
            |> Message.changeset(attrs)
            |> Repo.insert() do
                 Phoenix.PubSub.broadcast!(@pubsub, topic(room.id), {:new_message, message})
