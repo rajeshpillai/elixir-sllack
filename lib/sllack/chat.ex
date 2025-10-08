@@ -13,6 +13,12 @@ defmodule Sllack.Chat do
   import Ecto.Query
   import Ecto.Changeset
 
+  @room_page_size 10
+
+  def count_room_pages do
+    ceil(Repo.aggregate(Room, :count) / @room_page_size)
+  end
+
   def change_reply(reply, attrs \\ %{}) do
     Reply.changeset(reply, attrs)
   end
@@ -103,13 +109,16 @@ defmodule Sllack.Chat do
     Repo.get_by(RoomMembership, room_id: room.id, user_id: user.id)
   end
 
-  def list_rooms_with_joined(%User{} = user) do
+  def list_rooms_with_joined(page, %User{} = user) do
+    offset = (page - 1) * @room_page_size
     query =
       from r in Room,
         left_join: m in RoomMembership,
         on: r.id == m.room_id and m.user_id == ^user.id,
         select: {r, not is_nil(m.id)},
-        order_by: [asc: :name]
+        order_by: [asc: :name],
+        limit: ^@room_page_size,
+        offset: ^offset
 
     Repo.all(query)
   end
